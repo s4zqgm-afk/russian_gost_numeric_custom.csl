@@ -1,89 +1,84 @@
-<?xml version="1.0" encoding="utf-8"?>
-<style xmlns="http://purl.org/net/xbiblio/csl" version="1.0" class="in-text" default-locale="ru-RU">
+from pathlib import Path
+
+csl_content = """<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl"
+       version="1.0"
+       class="in-text"
+       default-locale="ru-RU">
   <info>
-    <title>Russian GOST-like numeric (custom)</title>
-    <title-short>GOST-numeric-custom</title-short>
-    <id>http://www.zotero.org/styles/gost-russian-numeric-custom</id>
-    <link href="http://www.zotero.org/styles/gost-russian-numeric-custom" rel="self"/>
+    <title>Russian numeric custom (GOST-like)</title>
+    <title-short>RU-numeric-custom</title-short>
+    <id>http://www.zotero.org/styles/ru-numeric-custom</id>
+    <link href="http://www.zotero.org/styles/ru-numeric-custom" rel="self"/>
     <category citation-format="numeric"/>
     <category field="generic-base"/>
     <updated>2025-12-09T00:00:00+00:00</updated>
     <author>
       <name>Custom ChatGPT Style</name>
     </author>
-    <summary>Custom Russian numeric style with [1] citations and book/journal formatting approximating GOST.</summary>
-    <language>ru-RU</language>
+    <summary>Простой русский числовой стиль: ссылки [1], список литературы по номерам.</summary>
   </info>
 
-  <locale xml:lang="ru">
+  <locale xml:lang="ru-RU">
     <terms>
-      <term name="edition">изд.</term>
-      <term name="page-range-delimiter">–</term>
       <term name="page">с.</term>
       <term name="pages">с.</term>
+      <term name="edition">изд.</term>
       <term name="and">и</term>
-      <term name="accessed">режим доступа</term>
-      <term name="in">В</term>
     </terms>
   </locale>
 
+  <!-- Автор(ы) -->
   <macro name="author">
     <names variable="author">
-      <name form="long" initialize-with=". " delimiter=", " name-as-sort-order="all"/>
+      <name form="long" initialize-with=". " name-as-sort-order="all" delimiter=", "/>
     </names>
   </macro>
 
-  <macro name="editor">
-    <names variable="editor">
-      <name form="long" initialize-with=". " delimiter=", " name-as-sort-order="all"/>
-    </names>
-  </macro>
-
+  <!-- Название -->
   <macro name="title">
     <choose>
-      <if type="article-newspaper article-magazine article-journal chapter paper-conference" match="any">
-        <text variable="title" quotes="false"/>
+      <if type="article-journal article-magazine article-newspaper chapter paper-conference" match="any">
+        <text variable="title"/>
       </if>
       <else>
-        <text variable="title" font-style="normal"/>
+        <text variable="title"/>
       </else>
     </choose>
   </macro>
 
+  <!-- Год -->
+  <macro name="year">
+    <date variable="issued">
+      <date-part name="year"/>
+    </date>
+  </macro>
+
+  <!-- Место и издательство -->
   <macro name="place-publisher-year">
     <group delimiter=": ">
       <group delimiter=". ">
         <text variable="publisher-place"/>
         <text variable="publisher"/>
       </group>
-      <date variable="issued">
-        <date-part name="year"/>
-      </date>
+      <text macro="year"/>
     </group>
   </macro>
 
+  <!-- Страницы диапазон -->
   <macro name="pages">
-    <group>
-      <text term="page" suffix=". "/>
+    <group delimiter=" ">
+      <text term="pages"/>
       <text variable="page"/>
     </group>
   </macro>
 
-  <macro name="number-of-pages">
-    <group delimiter=" ">
-      <text variable="number-of-pages"/>
-      <text term="pages"/>
-    </group>
-  </macro>
-
-  <macro name="container-title">
+  <!-- Название журнала / сборника -->
+  <macro name="container">
     <text variable="container-title"/>
   </macro>
 
-  <macro name="genre">
-    <text variable="genre"/>
-  </macro>
-
+  <!-- ЦИТАТЫ В ТЕКСТЕ -->
   <citation collapse="citation-number">
     <sort>
       <key variable="citation-number"/>
@@ -93,60 +88,73 @@
     </layout>
   </citation>
 
+  <!-- СПИСОК ЛИТЕРАТУРЫ -->
   <bibliography et-al-min="4" et-al-use-first="3" second-field-align="flush">
     <sort>
       <key variable="citation-number"/>
     </sort>
     <layout>
       <text variable="citation-number" suffix=" "/>
-      <group delimiter=". ">
-        <text macro="author"/>
-        <text macro="title"/>
-      </group>
       <choose>
+        <!-- Книги, отчёты, диссертации -->
         <if type="book bill report thesis" match="any">
-          <group prefix=" / " delimiter=", ">
-            <text macro="author"/>
-          </group>
-          <group prefix=". - " delimiter=" - ">
-            <text macro="place-publisher-year"/>
-            <text macro="number-of-pages"/>
+          <group delimiter=". ">
+            <group delimiter=" ">
+              <text macro="author"/>
+              <text macro="title"/>
+            </group>
+            <group prefix=" / " delimiter=", ">
+              <text macro="author"/>
+            </group>
+            <group prefix=". - " delimiter=" - ">
+              <text macro="place-publisher-year"/>
+              <text variable="number-of-pages" suffix=" с."/>
+            </group>
           </group>
         </if>
 
+        <!-- Главы и материалы конференций -->
         <else-if type="chapter paper-conference" match="any">
-          <group prefix=" // " delimiter=". ">
-            <text macro="container-title"/>
-          </group>
-          <group prefix=". - " delimiter=" - ">
-            <text macro="place-publisher-year"/>
-            <group delimiter=". ">
-              <text term="pages" form="short" text-case="lowercase"/>
-              <text variable="page"/>
-            </group>
-          </group>
-        </else-if>
-
-        <else-if type="article-journal article-magazine article-newspaper" match="any">
-          <group prefix=" // " delimiter=". ">
-            <text macro="container-title"/>
-          </group>
-          <group prefix=". – " delimiter=" – ">
-            <date variable="issued">
-              <date-part name="year"/>
-            </date>
+          <group delimiter=". ">
             <group delimiter=" ">
-              <text variable="volume" prefix="N "/>
+              <text macro="author"/>
+              <text macro="title"/>
             </group>
-            <group delimiter=". ">
-              <text term="pages" form="short" text-case="lowercase"/>
-              <text variable="page"/>
+            <group prefix=" // " delimiter=". ">
+              <text macro="container"/>
+            </group>
+            <group prefix=". - " delimiter=" - ">
+              <text macro="place-publisher-year"/>
+              <text macro="pages"/>
             </group>
           </group>
         </else-if>
 
+        <!-- Статьи в журналах и газетах -->
+        <else-if type="article-journal article-magazine article-newspaper" match="any">
+          <group delimiter=". ">
+            <group delimiter=" ">
+              <text macro="author"/>
+              <text macro="title"/>
+            </group>
+            <group prefix=" // " delimiter=". ">
+              <text macro="container"/>
+            </group>
+            <group prefix=". – " delimiter=" – ">
+              <text macro="year"/>
+              <group delimiter=" ">
+                <text variable="volume" prefix="N "/>
+              </group>
+              <text macro="pages"/>
+            </group>
+          </group>
+        </else-if>
+
+        <!-- Интернет-ресурсы и прочее -->
         <else>
-          <group prefix=". – " delimiter=". ">
+          <group delimiter=". ">
+            <text macro="author"/>
+            <text macro="title"/>
             <text variable="URL"/>
           </group>
         </else>
@@ -155,3 +163,8 @@
     </layout>
   </bibliography>
 </style>
+"""
+
+path = Path("/mnt/data/ru-numeric-custom.csl")
+path.write_text(csl_content, encoding="utf-8")
+path
